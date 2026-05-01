@@ -488,4 +488,4 @@ Choose your path:
 
 ---
 
-**Built with ❤️ using FastAPI, React, and Tailwind CSS**
+**Built  using FastAPI, React, and Tailwind CSS**

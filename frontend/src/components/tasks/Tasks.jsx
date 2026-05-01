@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MdAdd, MdFilterList } from 'react-icons/md';
+import { MdAdd, MdSort } from 'react-icons/md';
 import { format } from 'date-fns';
 import { tasksAPI, projectsAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../common/Button';
 import Modal from '../common/Modal';
 import Input from '../common/Input';
 import Select from '../common/Select';
 import LoadingSpinner from '../common/LoadingSpinner';
+import TaskCard from './TaskCard';
 
 const Tasks = () => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -24,12 +29,12 @@ const Tasks = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [sortBy, sortOrder]);
 
   const fetchData = async () => {
     try {
       const [tasksRes, projectsRes] = await Promise.all([
-        tasksAPI.getAll(),
+        tasksAPI.getAll({ sort_by: sortBy, sort_order: sortOrder }),
         projectsAPI.getAll(),
       ]);
       setTasks(tasksRes.data);
@@ -93,9 +98,15 @@ const Tasks = () => {
           <p className="text-gray-600 dark:text-gray-400">Manage and track your tasks</p>
         </div>
         <div className="flex items-center space-x-3">
-          <Button variant="secondary" icon={MdFilterList}>
-            Filter
-          </Button>
+          <Select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-40"
+          >
+            <option value="created_at">Date Created</option>
+            <option value="priority">Priority</option>
+            <option value="due_date">Deadline</option>
+          </Select>
           <Button onClick={() => setModalOpen(true)} icon={MdAdd}>
             Create Task
           </Button>
@@ -114,27 +125,13 @@ const Tasks = () => {
               </span>
             </div>
             <div className="space-y-3">
-              {statusTasks.map((task, index) => (
-                <motion.div
+              {statusTasks.map((task) => (
+                <TaskCard
                   key={task.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.05 * index }}
-                  whileHover={{ scale: 1.02 }}
-                  className="card p-4 cursor-pointer"
-                >
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2 line-clamp-2">{task.title}</h4>
-                  <div className="flex items-center justify-between">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${priorityColors[task.priority]}`}>
-                      {task.priority}
-                    </span>
-                    {task.due_date && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {format(new Date(task.due_date), 'MMM dd')}
-                      </span>
-                    )}
-                  </div>
-                </motion.div>
+                  task={task}
+                  onUpdate={fetchData}
+                  currentUserId={user?.id}
+                />
               ))}
             </div>
           </div>

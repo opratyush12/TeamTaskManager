@@ -85,7 +85,7 @@ export const projectsAPI = {
 
 // Tasks API
 export const tasksAPI = {
-  getAll: (params) => api.get('/tasks', { params }),
+  getAll: (params = {}) => api.get('/tasks', { params }),
   getById: (id) => api.get(`/tasks/${id}`),
   create: (data) => api.post('/tasks', data),
   update: (id, data) => api.put(`/tasks/${id}`, data),
@@ -99,6 +99,22 @@ export const dashboardAPI = {
   getOverview: () => api.get('/dashboard/overview'),
   getTasks: () => api.get('/dashboard/tasks'),
   getStats: () => api.get('/dashboard/stats'),
+};
+
+// Notifications API
+export const notificationsAPI = {
+  getAll: (unreadOnly = false) => api.get(`/notifications${unreadOnly ? '?unread_only=true' : ''}`),
+  getUnreadCount: () => api.get('/notifications/unread-count'),
+  markRead: (ids) => api.put('/notifications/mark-read', { notification_ids: ids }),
+  markAllRead: () => api.put('/notifications/mark-all-read'),
+  delete: (id) => api.delete(`/notifications/${id}`),
+};
+
+// Task actions API
+export const taskActionsAPI = {
+  accept: (taskId) => api.put(`/tasks/${taskId}/accept`),
+  reject: (taskId) => api.put(`/tasks/${taskId}/reject`),
+  complete: (taskId) => api.put(`/tasks/${taskId}/complete`),
 };
 
 export default api;

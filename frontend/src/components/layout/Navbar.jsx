@@ -3,6 +3,7 @@ import { MdBrightness4, MdBrightness7, MdLogout, MdPerson } from 'react-icons/md
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import NotificationBell from './NotificationBell';
 
 const Navbar = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -26,6 +27,8 @@ const Navbar = () => {
         </div>
 
         <div className="flex items-center space-x-4">
+          <NotificationBell />
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

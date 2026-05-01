@@ -20,6 +20,12 @@ class TaskPriority(str, enum.Enum):
     URGENT = "urgent"
 
 
+class TaskAssignmentStatus(str, enum.Enum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+
+
 class Task(Base):
     __tablename__ = "tasks"
 
@@ -31,6 +37,7 @@ class Task(Base):
     created_by = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     status = Column(Enum(TaskStatus), default=TaskStatus.TODO, nullable=False)
     priority = Column(Enum(TaskPriority), default=TaskPriority.MEDIUM, nullable=False)
+    assignment_status = Column(Enum(TaskAssignmentStatus), default=TaskAssignmentStatus.PENDING, nullable=True)
     due_date = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

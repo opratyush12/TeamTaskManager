@@ -30,3 +30,4 @@ class User(Base):
     created_projects = relationship("Project", back_populates="creator", foreign_keys="Project.created_by")
     created_tasks = relationship("Task", back_populates="creator", foreign_keys="Task.created_by")
     assigned_tasks = relationship("Task", back_populates="assignee", foreign_keys="Task.assigned_to")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")

@@ -40,10 +40,12 @@ def list_tasks(
     status: Optional[TaskStatus] = Query(None),
     assigned_to: Optional[str] = Query(None),
     overdue: Optional[bool] = Query(None),
+    sort_by: Optional[str] = Query(None, description="Sort by: priority, due_date, created_at"),
+    sort_order: Optional[str] = Query("asc", description="Sort order: asc or desc"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return get_tasks(db, current_user, project_id, status, assigned_to, overdue)
+    return get_tasks(db, current_user, project_id, status, assigned_to, overdue, sort_by, sort_order)
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
@@ -83,6 +85,36 @@ def assign_task_to_user(
     current_user: User = Depends(get_current_user)
 ):
     return assign_task(db, task_id, assign_data, current_user)
+
+
+@router.put("/{task_id}/accept", response_model=TaskResponse)
+def accept_task_assignment(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from app.services.task_service import accept_task
+    return accept_task(db, task_id, current_user)
+
+
+@router.put("/{task_id}/reject", response_model=TaskResponse)
+def reject_task_assignment(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from app.services.task_service import reject_task
+    return reject_task(db, task_id, current_user)
+
+
+@router.put("/{task_id}/complete", response_model=TaskResponse)
+def mark_task_complete(
+    task_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from app.services.task_service import complete_task
+    return complete_task(db, task_id, current_user)
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)

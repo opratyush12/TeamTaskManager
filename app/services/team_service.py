@@ -4,6 +4,7 @@ from app.models.team import Team, TeamMember, TeamRole
 from app.models.user import User
 from app.schemas.team import TeamCreate, TeamUpdate, TeamMemberAdd, TeamMemberUpdate
 from app.utils.rbac import check_team_permission, can_manage_team, can_delete_team
+from app.services.notification_service import notify_team_invite
 
 
 def create_team(db: Session, team_data: TeamCreate, creator: User) -> Team:
@@ -116,16 +117,32 @@ def add_team_member(db: Session, team_id: str, member_data: TeamMemberAdd, user:
             detail="Only team owners and managers can add members"
         )
 
-    new_member = db.query(User).filter(User.id == member_data.user_id).first()
-    if not new_member:
+    # Support both user_id and email
+    if member_data.email:
+        new_member = db.query(User).filter(User.email == member_data.email).first()
+        if not new_member:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No user found with email: {member_data.email}"
+            )
+        user_id = new_member.id
+    elif member_data.user_id:
+        new_member = db.query(User).filter(User.id == member_data.user_id).first()
+        if not new_member:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        user_id = member_data.user_id
+    else:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either user_id or email must be provided"
         )
 
     existing_membership = db.query(TeamMember).filter(
         TeamMember.team_id == team_id,
-        TeamMember.user_id == member_data.user_id
+        TeamMember.user_id == user_id
     ).first()
 
     if existing_membership:
@@ -136,13 +153,21 @@ def add_team_member(db: Session, team_id: str, member_data: TeamMemberAdd, user:
 
     new_membership = TeamMember(
         team_id=team_id,
-        user_id=member_data.user_id,
+        user_id=user_id,
         role=member_data.role
     )
 
     db.add(new_membership)
     db.commit()
     db.refresh(new_membership)
+
+    # Send notification
+    team = db.query(Team).filter(Team.id == team_id).first()
+    if team:
+        notify_team_invite(
+            db, user_id, team_id,
+            team.name, user.full_name
+        )
 
     return new_membership
 

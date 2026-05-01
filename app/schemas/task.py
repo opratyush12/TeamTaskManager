@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, field_validator
-from app.models.task import TaskStatus, TaskPriority
+from app.models.task import TaskStatus, TaskPriority, TaskAssignmentStatus
 from app.schemas.user import UserSummary
 
 
@@ -54,6 +54,7 @@ class TaskResponse(TaskBase):
     id: str
     project_id: str
     status: TaskStatus
+    assignment_status: Optional[TaskAssignmentStatus] = None
     assigned_to: Optional[str]
     created_by: Optional[str]
     completed_at: Optional[datetime]

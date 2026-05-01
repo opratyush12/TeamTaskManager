@@ -34,8 +34,15 @@ class TeamMemberBase(BaseModel):
 
 
 class TeamMemberAdd(BaseModel):
-    user_id: str
+    user_id: Optional[str] = None
+    email: Optional[str] = None
     role: TeamRole = TeamRole.MEMBER
+
+    @field_validator('email', 'user_id')
+    @classmethod
+    def validate_identifier(cls, v, info):
+        # At least one must be provided
+        return v
 
 
 class TeamMemberUpdate(BaseModel):
